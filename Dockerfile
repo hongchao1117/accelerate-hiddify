@@ -1,5 +1,8 @@
 FROM ubuntu:22.04
-FROM python:3.9
+
+# 将 Ubuntu 镜像源更改为中国境内源
+RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+# 添加其他构建步骤，例如安装软件包、设置环境变量等
 EXPOSE 80
 EXPOSE 443
 
