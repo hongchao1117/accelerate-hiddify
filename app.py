@@ -1,7 +1,7 @@
 import uuid
 from functools import wraps
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -115,8 +115,17 @@ def login():
 @login_required
 @handle_error
 def logout():
-    logout_user()
-    return jsonify({"message": "Logged out successfully"}), 200
+    # 检查请求中是否包含用户ID
+    user_id = request.json.get('user_id')
+    if user_id and user_id == str(current_user.id):  # 确保用户ID匹配
+        logout_user()
+        response_data = {
+            "message": "Logged out successfully",
+            "user_id": user_id
+        }
+        return jsonify(response_data), 200
+    else:
+        return jsonify({"message": "Unauthorized to log out this user."}), 403
 
 
 @app.route('/change_password', methods=['POST'])
