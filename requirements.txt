@@ -4,3 +4,4 @@ sqlalchemy
 uuid
 pymysql
 mysql-connector-python
+flask-login
