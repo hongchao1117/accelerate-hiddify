@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a3f4b6d1e58f9a8e5e9a5b7c1a9d8e2f5b6e9a4c7f8b1c2e3d5a7b9c4e6f1a0e'  # 请更改为一个强密钥
 
@@ -53,7 +54,7 @@ def handle_error(func):
     return wrapper
 
 
-@app.route('/get_node_list', methods=['GET'])
+@app.route('/get_node_list', methods=['GET', 'POST'])
 def get_node_list():
     node_list = [
         {
@@ -79,7 +80,7 @@ def get_node_list():
     return jsonify({"nodeList": node_list})
 
 
-@app.route('/get_user_info', methods=['POST'])
+@app.route('/get_user_info', methods=['POST', 'GET'])
 def get_user_info():
     data = request.get_json()
     user_id = data.get('userId')
@@ -106,7 +107,7 @@ def get_user_info():
     })
 
 
-@app.route('/get_package_list', methods=['GET'])
+@app.route('/get_package_list', methods=['POST', 'GET'])
 def get_package_list():
     package_list = [{
         "type": "month",
@@ -137,7 +138,7 @@ def get_package_list():
     })
 
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods=['POST', 'GET'])
 @handle_error
 def register():
     data = request.get_json()
@@ -171,7 +172,7 @@ def register():
     return jsonify({"message": "User registered successfully", "user_id": user_id}), 201
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST', 'GET'])
 @handle_error
 def login():
     data = request.get_json()
@@ -193,7 +194,7 @@ def login():
         return jsonify({"error": "Invalid username or password"}), 401
 
 
-@app.route('/logout', methods=['POST'])
+@app.route('/logout', methods=['POST', 'GET'])
 @login_required
 @handle_error
 def logout():
@@ -210,7 +211,7 @@ def logout():
         return jsonify({"message": "Unauthorized to log out this user."}), 403
 
 
-@app.route('/change_password', methods=['POST'])
+@app.route('/change_password', methods=['POST', 'GET'])
 @login_required
 @handle_error
 def change_password():
@@ -236,7 +237,7 @@ def change_password():
     return jsonify({"message": "Password changed successfully"}), 200
 
 
-@app.route('/user_orders', methods=['GET'])
+@app.route('/user_orders', methods=['POST', 'GET'])
 @login_required
 @handle_error
 def get_subscriptions():
@@ -255,7 +256,7 @@ def get_subscriptions():
         return jsonify({"error": "User not found"}), 404
 
 
-@app.route('/create_order', methods=['POST'])
+@app.route('/create_order', methods=['POST', 'GET'])
 @login_required
 @handle_error
 def create_order():
@@ -279,7 +280,7 @@ def create_order():
     return jsonify({"message": "Order created successfully"}), 200
 
 
-@app.route('/pay', methods=['POST'])
+@app.route('/pay', methods=['POST', 'GET'])
 @login_required
 @handle_error
 def pay():
