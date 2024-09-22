@@ -1,12 +1,10 @@
 import uuid
 from functools import wraps
 
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
-from werkzeug.security import generate_password_hash
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a3f4b6d1e58f9a8e5e9a5b7c1a9d8e2f5b6e9a4c7f8b1c2e3d5a7b9c4e6f1a0e'  # 请更改为一个强密钥
 
@@ -55,6 +53,90 @@ def handle_error(func):
     return wrapper
 
 
+@app.route('/get_node_list', methods=['GET'])
+def get_node_list():
+    node_list = [
+        {
+            "title": "US",
+            "config": {
+                "server": "198.2.240.89",
+                "port": 49303,
+                "password": "Bj6N25kZQS1sei",
+                "method": "ssh"
+            }
+        },
+        {
+            "title": "Japan",
+            "config": {
+                "server": "104.219.209.105",
+                "port": 41903,
+                "password": "3q1g8vKssMpg",
+                "method": "ssh"
+            }
+        }
+    ]
+
+    return jsonify({"nodeList": node_list})
+
+
+@app.route('/get_user_info', methods=['POST'])
+def get_user_info():
+    data = request.get_json()
+    user_id = data.get('userId')
+    if not user_id:
+        return jsonify({"error": "userId  is required"}), 400
+
+    with engine.connect() as connection:
+        # 检查用户名是否已存在
+        check_stmt = text("SELECT username,package_type FROM users WHERE user_id = :user_id")
+        existing_user = connection.execute(check_stmt, {"user_id": user_id}).fetchone()
+        if not existing_user:
+            return jsonify({"error": "Username isn't exists"}), 409
+        username = existing_user.username
+        packageType = existing_user.package_type
+
+    return jsonify({
+        "username": username,
+        "email": "",
+        "phone": "",
+        "remainTryTime": "0",
+        "packageType": packageType,
+        "packageExpiresTime": "",
+        "deviceCount": 1
+    })
+
+
+@app.route('/get_package_list', methods=['GET'])
+def get_package_list():
+    package_list = [{
+        "type": "month",
+        "title": "1 Month",
+        "fakePrice": "$9.99",
+        "price": "$7.99",
+        "priceTip": "Save $2.00"
+    },
+        {
+            "type": "quarter",
+            "title": "1 Quarter",
+            "fakePrice": "$29.99",
+            "price": "$23.99",
+            "priceTip": "Save $6.00"
+        },
+        {
+            "type": "year",
+            "title": "1 Year",
+            "fakePrice": "$119.96",
+            "price": "$89.96",
+            "priceTip": "Save $30.00"
+        }
+    ]
+
+    return jsonify({
+        "typeInit": "month",
+        "list": package_list
+    })
+
+
 @app.route('/register', methods=['POST'])
 @handle_error
 def register():
@@ -74,7 +156,7 @@ def register():
             return jsonify({"error": "Username already exists"}), 409
 
         user_id = str(uuid.uuid4())
-        hashed_password = generate_password_hash(password)
+        hashed_password = password
 
         stmt = text(
             "INSERT INTO users (user_id, username, password, package_type) VALUES (:user_id, :username, :password, :package_type)")
@@ -146,7 +228,7 @@ def change_password():
         if not result or not (result.password, current_password):
             return jsonify({"error": "Current password is incorrect"}), 401
 
-        hashed_new_password = generate_password_hash(new_password)
+        hashed_new_password = (new_password)
         update_stmt = text("UPDATE users SET password = :new_password WHERE user_id = :user_id")
         connection.execute(update_stmt, {"new_password": hashed_new_password, "user_id": current_user.id})
         connection.commit()
