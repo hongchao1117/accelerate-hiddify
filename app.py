@@ -199,7 +199,7 @@ def login():
 @handle_error
 def logout():
     # 检查请求中是否包含用户ID
-    user_id = request.json.get('user_id')
+    user_id = request.json.get('userId')
     if user_id and user_id == str(current_user.id):  # 确保用户ID匹配
         logout_user()
         response_data = {
